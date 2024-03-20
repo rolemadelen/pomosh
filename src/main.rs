@@ -59,7 +59,7 @@ fn merge_and_print(a: &str, b: &str) {
 
     println!();
     for i in 0..5 {
-        print!("{}  {}", a[i].blue(), b[i].blue());
+        print!("{}  {}", a[i].bright_blue(), b[i].bright_blue());
         println!();
     }
     println!();
@@ -119,7 +119,7 @@ fn main() {
 
         let square_emoji = char::from_u32(0x25fb).unwrap();
         while focus_min >= 0 {
-            print!("\x1B[2J");
+            print!("\x1B[2J\x1b[1;1H");
             for i in 0..=session_cnt {
                 print!("{} ", books_emoji[i % 4]);
                 if (i + 1) % 4 == 0 {
@@ -140,7 +140,7 @@ fn main() {
             let ones = (focus_min % 10) as usize;
             merge_and_print(ascii_art[tens], ascii_art[ones]);
 
-            sleep(Duration::new(1, 0));
+            sleep(Duration::new(60, 0));
             focus_min -= 1;
         }
 
@@ -152,7 +152,7 @@ fn main() {
         }
 
         while break_min >= 0 {
-            print!("\x1B[2J");
+            print!("\x1B[2J\x1b[1;1H");
             if long_break {
                 println!(
                     "long break: {} minutes / ({start} - {end})",
@@ -166,7 +166,7 @@ fn main() {
             let ones = (break_min % 10) as usize;
             merge_and_print(ascii_art[tens], ascii_art[ones]);
 
-            sleep(Duration::new(1, 0));
+            sleep(Duration::new(60, 0));
             break_min -= 1;
         }
 
