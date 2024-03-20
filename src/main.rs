@@ -1,7 +1,7 @@
 use chrono::{Local, TimeDelta};
 use std::io::{self, Write};
 use std::thread::sleep;
-use std::time::{Duration};
+use std::time::Duration;
 
 fn read_string() -> String {
     let mut input = String::new();
@@ -11,13 +11,13 @@ fn read_string() -> String {
     input
 }
 
-fn setup(focus_session: &mut i32, break_session: &mut i32) {
+fn setup(focus_session: &mut i64, break_session: &mut i64) {
     print!("How long is the focus session? (minutes): ");
     io::stdout().flush().unwrap();
     *focus_session = read_string()
         .trim()
         .parse()
-        .expect("faild to parse a focus_session");
+        .expect("failed to parse a focus_session");
 
     print!("How long is the break? (minutes): ");
     io::stdout().flush().unwrap();
@@ -42,22 +42,15 @@ fn merge_and_print(a: &str, b: &str) {
     println!();
 }
 
+fn get_session_duration(duration: i64) -> (String, String) {
+    let session_start = Local::now();
+    let session_end = session_start + TimeDelta::try_minutes(duration).unwrap();
+    let start_time_str = session_start.format("%H:%M").to_string();
+    let end_time_str = session_end.format("%H:%M").to_string();
+    (start_time_str, end_time_str)
+}
+
 fn main() {
-    let mut focus_session: i32 = 0;
-    let mut break_session: i32 = 0;
-
-    setup(&mut focus_session, &mut break_session);
-
-    loop {
-        print!("Is this correct? '{focus_session}/{break_session}' (y/N): ");
-        io::stdout().flush().unwrap();
-        match read_string().trim() {
-            "y" | "Y" => break,
-            "n" | "N" => setup(&mut focus_session, &mut break_session),
-            _ => continue,
-        }
-    }
-
     let ascii_art: [&str; 10] = [
         "000000\n00  00\n00  00\n00  00\n000000",
         "1111  \n  11  \n  11  \n  11  \n111111",
@@ -71,44 +64,51 @@ fn main() {
         "999999\n99  99\n999999\n    99\n999999",
     ];
 
-    let mut focus_min = focus_session - 1;
-    let mut break_min = break_session - 1;
+    let mut focus_session: i64 = 0;
+    let mut break_session: i64 = 0;
+
+    setup(&mut focus_session, &mut break_session);
 
     loop {
-        let session_start = Local::now();
-        let session_end = session_start + TimeDelta::try_minutes(50).unwrap();
-        let start_time_str = session_start.format("%H:%M").to_string();
-        let end_time_str = session_end.format("%H:%M").to_string();
+        print!("Is this correct? '{focus_session}/{break_session}' (y/N): ");
+        io::stdout().flush().unwrap();
+        match read_string().trim() {
+            "y" | "Y" => break,
+            "n" | "N" => setup(&mut focus_session, &mut break_session),
+            _ => continue,
+        }
+    }
+
+    loop {
+        let mut focus_min = focus_session - 1;
+        let mut break_min = break_session - 1;
+
+        let (start, end) = get_session_duration(focus_session);
 
         while focus_min >= 0 {
             print!("\x1B[2J");
-            println!("focus for {focus_session} minute(s) ー ({start_time_str} - {end_time_str})");
+            println!("focus for {focus_session} minute(s) ー ({start} - {end})");
 
             let tens = (focus_min / 10) as usize;
             let ones = (focus_min % 10) as usize;
             merge_and_print(ascii_art[tens], ascii_art[ones]);
 
-            sleep(Duration::new(1, 0));
+            sleep(Duration::new(60, 0));
             focus_min -= 1;
         }
-        focus_min = focus_session - 1;
 
-        let session_start = Local::now();
-        let session_end = session_start + TimeDelta::try_minutes(50).unwrap();
-        let start_time_str = session_start.format("%H:%M").to_string();
-        let end_time_str = session_end.format("%H:%M").to_string();
+        let (start, end) = get_session_duration(break_session);
 
         while break_min >= 0 {
             print!("\x1B[2J");
-            println!("take a break for {break_session} minute(s) ー ({start_time_str} - {end_time_str})");
+            println!("take a break for {break_session} minute(s) ー ({start} - {end})");
 
             let tens = (break_min / 10) as usize;
             let ones = (break_min % 10) as usize;
             merge_and_print(ascii_art[tens], ascii_art[ones]);
 
-            sleep(Duration::new(1, 0));
+            sleep(Duration::new(60, 0));
             break_min -= 1;
         }
-        break_min = break_session - 1;
     }
 }
