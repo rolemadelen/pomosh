@@ -1,11 +1,10 @@
 use chrono::{Local, TimeDelta};
 use colored::Colorize;
-use std::io::{self, Write, BufReader};
-use std::thread::sleep;
-use std::thread;
-use std::time::Duration;
-use std::fs::File;
 use rodio::{Decoder, OutputStream, Sink};
+use std::fs::File;
+use std::io::{self, BufReader, Write};
+use std::thread::{self, sleep};
+use std::time::Duration;
 
 fn read_string() -> String {
     let mut input = String::new();
@@ -19,6 +18,8 @@ fn setup(focus_session: &mut i64, break_session: &mut i64) {
     let focus_bound = [5, 90];
     let break_bound = [2, 90];
     loop {
+        print!("\x1B[2J\x1b[1;1H");
+        println!();
         print!(
             "How long is the focus session? ({lower}-{upper} minutes): ",
             lower = focus_bound[0],
@@ -62,7 +63,7 @@ fn merge_and_print(a: &str, b: &str) {
 
     println!();
     for i in 0..5 {
-        print!("{}  {}", a[i].bright_blue(), b[i].bright_blue());
+        print!(" {}  {}", a[i].bright_blue(), b[i].bright_blue());
         println!();
     }
     println!();
@@ -140,17 +141,17 @@ fn main() {
             for i in 0..=session_cnt {
                 print!("{} ", books_emoji[i % 4]);
             }
-            for _ in 0..(3-session_cnt) {
+            for _ in 0..(3 - session_cnt) {
                 print!("{} ", square_emoji[0]);
             }
-            println!(" (r{}.{})", round, session_cnt+1);
+            println!(" (r{}.{})", round, session_cnt + 1);
             println!("\nfocus: {focus_session} mins\n({start} - {end})");
 
             let tens = (focus_min / 10) as usize;
             let ones = (focus_min % 10) as usize;
             merge_and_print(ascii_art[tens], ascii_art[ones]);
 
-            sleep(Duration::new(1, 0));
+            sleep(Duration::new(60, 0));
             focus_min -= 1;
         }
         thread::spawn(move || {
@@ -170,14 +171,14 @@ fn main() {
             for i in 0..=session_cnt {
                 print!("{} ", books_emoji[i % 4]);
             }
-            for i in 0..(3-session_cnt) {
-                if i==0 {
+            for i in 0..(3 - session_cnt) {
+                if i == 0 {
                     print!("{} ", square_emoji[1]);
                 } else {
                     print!("{} ", square_emoji[0]);
                 }
             }
-            println!(" (r{}.{})", round, session_cnt+1);
+            println!(" (r{}.{})", round, session_cnt + 1);
             if long_break {
                 println!(
                     "\nlong break: {} mins\n({start} - {end})",
@@ -191,14 +192,14 @@ fn main() {
             let ones = (break_min % 10) as usize;
             merge_and_print(ascii_art[tens], ascii_art[ones]);
 
-            sleep(Duration::new(1, 0));
+            sleep(Duration::new(60, 0));
             break_min -= 1;
         }
         thread::spawn(move || {
             play_audio();
         });
 
-        if (session_cnt+1)%4 == 0 {
+        if (session_cnt + 1) % 4 == 0 {
             round += 1;
         }
 
