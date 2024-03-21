@@ -123,7 +123,7 @@ impl SessionConfig {
     }
 
     fn get_session_duration(&self, duration_type: DurationType) -> (String, String) {
-        let mut duration: i64 = 0;
+        let duration: i64;
         match duration_type {
             DurationType::Focus => duration = self.focus_duration,
             DurationType::Break => duration = self.break_duration,
