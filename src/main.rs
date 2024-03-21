@@ -1,92 +1,137 @@
 use chrono::{Local, TimeDelta};
 use colored::Colorize;
 use rodio::{Decoder, OutputStream, Sink};
-use std::fs::File;
-use std::io::{self, BufReader, Write};
-use std::thread::{self, sleep};
-use std::time::Duration;
+use std::{
+    fs::File,
+    io::{self, BufReader, Write},
+    thread::{self, sleep},
+    time::Duration,
+};
 
-fn read_string() -> String {
-    let mut input = String::new();
-    io::stdin()
-        .read_line(&mut input)
-        .expect("[read_int()] failed to read an input");
-    input
+enum SquareEmoji {
+    Open = 0x25fb,
+    Closed = 0x25fc,
+}
+enum BookEmoji {
+    Red = 0x1f4d5,
+    Green = 0x1f4d7,
+    Blue = 0x1f4d8,
+    Orange = 0x1f4d9,
 }
 
-fn setup(focus_session: &mut i64, break_session: &mut i64) {
-    let focus_bound = [5, 90];
-    let break_bound = [2, 90];
-    loop {
+enum DurationType {
+    Focus,
+    Break,
+}
+
+struct SessionConfig {
+    focus_duration: i64,
+    break_duration: i64,
+    long_break_duration: i64,
+    enable_chime: bool,
+}
+
+impl SessionConfig {
+    fn new() -> Self {
+        Self {
+            focus_duration: 25,
+            break_duration: 5,
+            long_break_duration: 15,
+            enable_chime: true,
+        }
+    }
+
+    fn prompt_for_settings(&mut self) {
         print!("\x1B[2J\x1b[1;1H");
         println!();
-        print!(
-            "How long is the focus session? ({lower}-{upper} minutes): ",
-            lower = focus_bound[0],
-            upper = focus_bound[1]
-        );
-        io::stdout().flush().unwrap();
-        *focus_session = read_string()
-            .trim()
-            .parse()
-            .expect("failed to parse a focus_session");
 
-        if *focus_session >= 5 && *focus_session <= 90 {
-            break;
+        self.focus_duration = self.prompt_for_duration("Focus duration");
+        self.break_duration = self.prompt_for_duration("Short break duration");
+        self.long_break_duration = self.prompt_for_duration("Long break duration");
+        self.enable_chime = self.prompt_for_audio("Enable the 'session complete' chime?");
+        self.validate_config();
+    }
+
+    fn validate_config(&mut self) {
+        print!("\x1B[2J\x1b[1;1H");
+        println!("Focus duration: {} mins", self.focus_duration);
+        println!("Break duration: {} mins", self.break_duration);
+        println!("Long Break duration: {} mins", self.long_break_duration);
+        if self.enable_chime == true {
+            println!("Chime: enabled");
+        } else {
+            println!("Chime: disabled");
+        }
+        print!("Start the session? (y/N): ");
+        io::stdout().flush().unwrap();
+
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).expect("Failed to read input - validate_config");
+
+        match input.trim() {
+            "y" | "Y" => return,
+            _ => self.prompt_for_settings(),
         }
     }
 
-    loop {
-        print!(
-            "How long is the short break? ({lower}-{upper} minutes): ",
-            lower = break_bound[0],
-            upper = break_bound[1]
-        );
-        io::stdout().flush().unwrap();
-        *break_session = read_string()
-            .trim()
-            .parse()
-            .expect("failed to parse a break_session");
+    fn prompt_for_duration(&self, prompt: &str) -> i64 {
+        let duration_bound = [5, 90];
 
-        if *break_session >= 2 && *break_session <= 90 {
-            break;
+        loop {
+            print!(
+                "{} ({lower}-{upper} minutes): ",
+                prompt,
+                lower = duration_bound[0],
+                upper = duration_bound[1]
+            );
+            io::stdout().flush().unwrap();
+
+            let mut input = String::new();
+            io::stdin().read_line(&mut input).expect("Failed to read input - prompt_for_duration");
+            match input.trim().parse::<i64>() {
+                Ok(t) => {
+                    if t >= duration_bound[0] && t <= duration_bound[1] {
+                        return t;
+                    } else {
+                        eprintln!(
+                            "Invalid input: {}",
+                            "invalid range was found".to_string().red()
+                        )
+                    }
+                }
+                Err(e) => eprintln!("Invalid input: {}", e.to_string().red()),
+            }
         }
     }
-}
 
-fn merge_and_print(a: &str, b: &str) {
-    let a = a.to_string();
-    let b = b.to_string();
+    fn prompt_for_audio(&self, prompt: &str) -> bool {
+        print!("{} (y/N): ", prompt);
+        io::stdout().flush().unwrap();
 
-    let a: Vec<&str> = a.split('\n').collect();
-    let b: Vec<&str> = b.split('\n').collect();
-
-    println!();
-    for i in 0..5 {
-        print!(" {}  {}", a[i].bright_blue(), b[i].bright_blue());
-        println!();
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).expect("Failed to read input - prompt_for_audio");
+        match input.trim() {
+            "y" | "Y" => return true,
+            _ => return false,
+        }
     }
-    println!();
+
+    fn get_session_duration(&self, duration_type: DurationType) -> (String, String) {
+        let mut duration: i64 = 0;
+        match duration_type {
+            DurationType::Focus => duration = self.focus_duration,
+            DurationType::Break => duration = self.break_duration,
+        }
+
+        let session_start = Local::now();
+        let session_end = session_start + TimeDelta::try_minutes(duration).unwrap();
+        let start_time_str = session_start.format("%H:%M").to_string();
+        let end_time_str = session_end.format("%H:%M").to_string();
+        (start_time_str, end_time_str)
+    }
 }
 
-fn get_session_duration(duration: i64) -> (String, String) {
-    let session_start = Local::now();
-    let session_end = session_start + TimeDelta::try_minutes(duration).unwrap();
-    let start_time_str = session_start.format("%H:%M").to_string();
-    let end_time_str = session_end.format("%H:%M").to_string();
-    (start_time_str, end_time_str)
-}
-
-fn play_audio() {
-    let file = File::open("./src/timesup.mp3").unwrap();
-    let source = Decoder::new(BufReader::new(file)).unwrap();
-    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
-    let sink = Sink::try_new(&stream_handle).unwrap();
-
-    sink.append(source);
-    sink.sleep_until_end();
-}
-fn main() {
+fn run_session(config: &SessionConfig) {
     let ascii_art: [&str; 10] = [
         "000000\n00  00\n00  00\n00  00\n000000",
         "1111  \n  11  \n  11  \n  11  \n111111",
@@ -99,41 +144,27 @@ fn main() {
         "888888\n88  88\n888888\n88  88\n888888",
         "999999\n99  99\n999999\n    99\n999999",
     ];
-
-    let mut focus_session: i64 = 0;
-    let mut break_session: i64 = 0;
-
-    setup(&mut focus_session, &mut break_session);
-
-    loop {
-        print!("Is this correct? '{focus_session}/{break_session}' (y/N): ");
-        io::stdout().flush().unwrap();
-        match read_string().trim() {
-            "y" | "Y" => break,
-            "n" | "N" => setup(&mut focus_session, &mut break_session),
-            _ => continue,
-        }
-    }
-
     let mut session_cnt = 0;
     let mut round = 1;
+    let should_chime = config.enable_chime;
+
+    let square_emoji = [
+        char::from_u32(SquareEmoji::Open as u32).unwrap(),
+        char::from_u32(SquareEmoji::Closed as u32).unwrap(),
+    ];
+    let books_emoji = [
+        char::from_u32(BookEmoji::Red as u32).unwrap(),
+        char::from_u32(BookEmoji::Green as u32).unwrap(),
+        char::from_u32(BookEmoji::Blue as u32).unwrap(),
+        char::from_u32(BookEmoji::Orange as u32).unwrap(),
+    ];
 
     loop {
-        let mut focus_min = focus_session - 1;
-        let mut break_min = break_session - 1;
+        let mut focus_min = config.focus_duration - 1;
+        let mut break_min = config.break_duration - 1;
         let mut long_break = false;
 
-        let (start, end) = get_session_duration(focus_session);
-        let square_emoji = [
-            char::from_u32(0x25fb).unwrap(),
-            char::from_u32(0x25fc).unwrap(),
-        ];
-        let books_emoji = [
-            char::from_u32(0x1f4d5).unwrap(),
-            char::from_u32(0x1f4d7).unwrap(),
-            char::from_u32(0x1f4d8).unwrap(),
-            char::from_u32(0x1f4d9).unwrap(),
-        ];
+        let (start, end) = config.get_session_duration(DurationType::Focus);
 
         while focus_min >= 0 {
             print!("\x1B[2J\x1b[1;1H");
@@ -145,7 +176,7 @@ fn main() {
                 print!("{} ", square_emoji[0]);
             }
             println!(" (r{}.{})", round, session_cnt + 1);
-            println!("\nfocus: {focus_session} mins\n({start} - {end})");
+            println!("\nfocus: {} mins\n({start} - {end})", config.focus_duration);
 
             let tens = (focus_min / 10) as usize;
             let ones = (focus_min % 10) as usize;
@@ -154,11 +185,13 @@ fn main() {
             sleep(Duration::new(60, 0));
             focus_min -= 1;
         }
-        thread::spawn(move || {
-            play_audio();
-        });
+        if should_chime {
+            thread::spawn(move || {
+                play_audio();
+            });
+        }
 
-        let (start, end) = get_session_duration(break_session);
+        let (start, end) = config.get_session_duration(DurationType::Break);
 
         if (session_cnt + 1) % 4 == 0 {
             long_break = true;
@@ -182,10 +215,13 @@ fn main() {
             if long_break {
                 println!(
                     "\nlong break: {} mins\n({start} - {end})",
-                    break_session << 1
+                    config.long_break_duration
                 );
             } else {
-                println!("\nshort break: {break_session} mins\n({start} - {end})");
+                println!(
+                    "\nshort break: {} mins\n({start} - {end})",
+                    config.break_duration
+                );
             }
 
             let tens = (break_min / 10) as usize;
@@ -195,9 +231,11 @@ fn main() {
             sleep(Duration::new(60, 0));
             break_min -= 1;
         }
-        thread::spawn(move || {
-            play_audio();
-        });
+        if should_chime == true {
+            thread::spawn(move || {
+                play_audio();
+            });
+        }
 
         if (session_cnt + 1) % 4 == 0 {
             round += 1;
@@ -205,4 +243,35 @@ fn main() {
 
         session_cnt = (session_cnt + 1) % 4;
     }
+}
+
+fn play_audio() {
+    let file = File::open("./src/timesup.mp3").unwrap();
+    let source = Decoder::new(BufReader::new(file)).unwrap();
+    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+    let sink = Sink::try_new(&stream_handle).unwrap();
+
+    sink.append(source);
+    sink.sleep_until_end();
+}
+
+fn merge_and_print(a: &str, b: &str) {
+    let a = a.to_string();
+    let b = b.to_string();
+
+    let a: Vec<&str> = a.split('\n').collect();
+    let b: Vec<&str> = b.split('\n').collect();
+
+    println!();
+    for i in 0..5 {
+        print!(" {}  {}", a[i].bright_blue(), b[i].bright_blue());
+        println!();
+    }
+    println!();
+}
+
+fn main() {
+    let mut config = SessionConfig::new();
+    config.prompt_for_settings();
+    run_session(&config);
 }
