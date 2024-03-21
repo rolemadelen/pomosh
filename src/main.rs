@@ -1,8 +1,11 @@
 use chrono::{Local, TimeDelta};
 use colored::Colorize;
-use std::io::{self, Write};
+use std::io::{self, Write, BufReader};
 use std::thread::sleep;
+use std::thread;
 use std::time::Duration;
+use std::fs::File;
+use rodio::{Decoder, OutputStream, Sink};
 
 fn read_string() -> String {
     let mut input = String::new();
@@ -73,6 +76,15 @@ fn get_session_duration(duration: i64) -> (String, String) {
     (start_time_str, end_time_str)
 }
 
+fn play_audio() {
+    let file = File::open("./src/timesup.mp3").unwrap();
+    let source = Decoder::new(BufReader::new(file)).unwrap();
+    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+    let sink = Sink::try_new(&stream_handle).unwrap();
+
+    sink.append(source);
+    sink.sleep_until_end();
+}
 fn main() {
     let ascii_art: [&str; 10] = [
         "000000\n00  00\n00  00\n00  00\n000000",
@@ -138,9 +150,12 @@ fn main() {
             let ones = (focus_min % 10) as usize;
             merge_and_print(ascii_art[tens], ascii_art[ones]);
 
-            sleep(Duration::new(60, 0));
+            sleep(Duration::new(1, 0));
             focus_min -= 1;
         }
+        thread::spawn(move || {
+            play_audio();
+        });
 
         let (start, end) = get_session_duration(break_session);
 
@@ -176,9 +191,12 @@ fn main() {
             let ones = (break_min % 10) as usize;
             merge_and_print(ascii_art[tens], ascii_art[ones]);
 
-            sleep(Duration::new(60, 0));
+            sleep(Duration::new(1, 0));
             break_min -= 1;
         }
+        thread::spawn(move || {
+            play_audio();
+        });
 
         if (session_cnt+1)%4 == 0 {
             round += 1;
