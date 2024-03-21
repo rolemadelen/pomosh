@@ -66,7 +66,9 @@ impl SessionConfig {
         io::stdout().flush().unwrap();
 
         let mut input = String::new();
-        io::stdin().read_line(&mut input).expect("Failed to read input - validate_config");
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read input - validate_config");
 
         match input.trim() {
             "y" | "Y" => return,
@@ -87,7 +89,9 @@ impl SessionConfig {
             io::stdout().flush().unwrap();
 
             let mut input = String::new();
-            io::stdin().read_line(&mut input).expect("Failed to read input - prompt_for_duration");
+            io::stdin()
+                .read_line(&mut input)
+                .expect("Failed to read input - prompt_for_duration");
             match input.trim().parse::<i64>() {
                 Ok(t) => {
                     if t >= duration_bound[0] && t <= duration_bound[1] {
@@ -109,7 +113,9 @@ impl SessionConfig {
         io::stdout().flush().unwrap();
 
         let mut input = String::new();
-        io::stdin().read_line(&mut input).expect("Failed to read input - prompt_for_audio");
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read input - prompt_for_audio");
         match input.trim() {
             "y" | "Y" => return true,
             _ => return false,
