@@ -1,6 +1,6 @@
 
 <div align="center">
-    <h3>$ pomosh</h3>
+    <h1>pomosh</h1>
     <b>Command-line Pomodoro Timer written in Rust</b>
     <div>
     	<a href="LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
@@ -18,7 +18,7 @@ Pomosh is a command-line pomodoro timer written in `Rust` that (supposedly) help
 <img src="./assets/pomosh-screenshot-2.jpg" width="150" />
 </div>
 
-### Pomodoro technique?
+## Pomodoro technique?
 
 Here are the basic steps of the pomodoro technique:
 1. Decide the task to focus on.
@@ -30,7 +30,28 @@ Here are the basic steps of the pomodoro technique:
 
 Typical pomodoro intervals are 25/5 (25 minutes on, 5 minutes off), and 50/10.
 
-### Guide 
+## Installation
+
+### Build from source
+
+First, install `rustup` to get the `rust` compiler using `curl https://sh.rustup.rs -sSf | sh -s`. Then, 
+
+```sh
+$ git clone https://github.comrolemadelen/pomosh
+$ cd pomosh
+$ cargo build --release
+
+$ ./target/release/pomosh
+```
+
+### Homebrew
+
+```shell
+$ brew tap rolemadelen/pomosh
+$ brew install pomosh
+```
+
+## Guide 
 
 You can set the focus, short-break, and the long-break durations all in minutes. You can also enable or disable the chime when the session/break completes.
 
