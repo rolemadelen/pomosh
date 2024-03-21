@@ -103,6 +103,7 @@ fn main() {
     }
 
     let mut session_cnt = 0;
+    let mut round = 1;
 
     loop {
         let mut focus_min = focus_session - 1;
@@ -110,6 +111,10 @@ fn main() {
         let mut long_break = false;
 
         let (start, end) = get_session_duration(focus_session);
+        let square_emoji = [
+            char::from_u32(0x25fb).unwrap(),
+            char::from_u32(0x25fc).unwrap(),
+        ];
         let books_emoji = [
             char::from_u32(0x1f4d5).unwrap(),
             char::from_u32(0x1f4d7).unwrap(),
@@ -117,24 +122,17 @@ fn main() {
             char::from_u32(0x1f4d9).unwrap(),
         ];
 
-        let square_emoji = char::from_u32(0x25fb).unwrap();
         while focus_min >= 0 {
             print!("\x1B[2J\x1b[1;1H");
+            println!();
             for i in 0..=session_cnt {
                 print!("{} ", books_emoji[i % 4]);
-                if (i + 1) % 4 == 0 {
-                    println!();
-                }
             }
-            for i in 0..4 - (session_cnt % 4) - 1 {
-                print!("{} ", square_emoji);
-                if (i + 1) % 4 == 0 {
-                    println!();
-                }
+            for _ in 0..(3-session_cnt) {
+                print!("{} ", square_emoji[0]);
             }
-            println!();
-            println!();
-            println!("focus: {focus_session} minutes / ({start} - {end})");
+            println!(" (r{}.{})", round, session_cnt+1);
+            println!("\nfocus: {focus_session} mins\n({start} - {end})");
 
             let tens = (focus_min / 10) as usize;
             let ones = (focus_min % 10) as usize;
@@ -153,13 +151,25 @@ fn main() {
 
         while break_min >= 0 {
             print!("\x1B[2J\x1b[1;1H");
+            println!();
+            for i in 0..=session_cnt {
+                print!("{} ", books_emoji[i % 4]);
+            }
+            for i in 0..(3-session_cnt) {
+                if i==0 {
+                    print!("{} ", square_emoji[1]);
+                } else {
+                    print!("{} ", square_emoji[0]);
+                }
+            }
+            println!(" (r{}.{})", round, session_cnt+1);
             if long_break {
                 println!(
-                    "long break: {} minutes / ({start} - {end})",
+                    "\nlong break: {} mins\n({start} - {end})",
                     break_session << 1
                 );
             } else {
-                println!("short break: {break_session} minutes / ({start} - {end})");
+                println!("\nshort break: {break_session} mins\n({start} - {end})");
             }
 
             let tens = (break_min / 10) as usize;
@@ -170,6 +180,10 @@ fn main() {
             break_min -= 1;
         }
 
-        session_cnt += 1;
+        if (session_cnt+1)%4 == 0 {
+            round += 1;
+        }
+
+        session_cnt = (session_cnt + 1) % 4;
     }
 }
