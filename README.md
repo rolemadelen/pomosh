@@ -4,6 +4,7 @@
     <b>Command-line Pomodoro Timer written in Rust</b>
     <div>
     	<a href="LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+    	<a href="#"><img src="https://img.shields.io/badge/rust-1.76.0-blue"></a>
     </div>
 </div>
 
