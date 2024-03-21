@@ -1,2 +1,4 @@
-# Terminal Pomodoro
+# Pomosh
+
+Pomodoro + Shell = Pomosh
 
