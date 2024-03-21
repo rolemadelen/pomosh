@@ -2,3 +2,4 @@
 
 Pomodoro + Shell = Pomosh
 
+![](./demo.gif)
