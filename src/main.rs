@@ -2,11 +2,12 @@ use chrono::{Local, TimeDelta};
 use colored::Colorize;
 use rodio::{Decoder, OutputStream, Sink};
 use std::{
-    fs::File,
-    io::{self, BufReader, Write},
+    io::{self, BufReader, Write, Cursor},
     thread::{self, sleep},
     time::Duration,
 };
+
+const CHIME_SOUND: &[u8] = include_bytes!("../assets/chime.mp3");
 
 enum SquareEmoji {
     Open = 0x25fb,
@@ -252,8 +253,8 @@ fn run_session(config: &SessionConfig) {
 }
 
 fn play_audio() {
-    let file = File::open("./src/timesup.mp3").unwrap();
-    let source = Decoder::new(BufReader::new(file)).unwrap();
+    let cursor = Cursor::new(CHIME_SOUND);
+    let source = Decoder::new(BufReader::new(cursor)).unwrap();
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let sink = Sink::try_new(&stream_handle).unwrap();
 

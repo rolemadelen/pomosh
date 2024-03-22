@@ -9,3 +9,6 @@ edition = "2021"
 chrono = "0.4.23"
 colored = "2.1.0"
 rodio = "0.13"
+
+[package.metadata.cargo-machete]
+ignore = ["rand"]
