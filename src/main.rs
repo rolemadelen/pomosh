@@ -7,6 +7,7 @@ use std::{
     time::Duration,
 };
 
+
 const CHIME_SOUND: &[u8] = include_bytes!("../assets/chime.mp3");
 
 enum SquareEmoji {
