@@ -51,6 +51,13 @@ $ brew tap rolemadelen/pomosh
 $ brew install pomosh
 ```
 
+To update, run 
+
+```sh
+$ brew update
+$ brew upgrade pomosh
+```
+
 ## Guide 
 
 You can set the focus, short-break, and the long-break durations all in minutes. You can also enable or disable the chime when the session/break completes.
