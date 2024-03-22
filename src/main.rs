@@ -191,7 +191,7 @@ fn run_session(config: &SessionConfig) {
             sleep(Duration::new(60, 0));
             focus_min -= 1;
         }
-        if should_chime {
+        if should_chime == true {
             thread::spawn(move || {
                 play_audio();
             });
