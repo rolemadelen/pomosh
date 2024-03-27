@@ -177,7 +177,7 @@ fn run_session(config: &SessionConfig) {
             let ones = (focus_min % 10) as usize;
             merge_and_print(ascii_art[tens], ascii_art[ones]);
 
-            sleep(Duration::new(1, 0));
+            sleep(Duration::new(60, 0));
             focus_min -= 1;
         }
         if !mute {
@@ -223,7 +223,7 @@ fn run_session(config: &SessionConfig) {
             let ones = (break_min % 10) as usize;
             merge_and_print(ascii_art[tens], ascii_art[ones]);
 
-            sleep(Duration::new(1, 0));
+            sleep(Duration::new(60, 0));
             break_min -= 1;
         }
         if !mute {
