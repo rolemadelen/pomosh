@@ -6,6 +6,7 @@ use std::{
     thread::{self, sleep},
     time::Duration,
 };
+use clap::Parser;
 
 
 const CHIME_SOUND: &[u8] = include_bytes!("../assets/chime.mp3");
@@ -31,7 +32,7 @@ struct SessionConfig {
     focus_duration: i64,
     break_duration: i64,
     long_break_duration: i64,
-    enable_chime: bool,
+    mute: bool,
 }
 
 impl SessionConfig {
@@ -39,8 +40,8 @@ impl SessionConfig {
         Self {
             focus_duration: 25,
             break_duration: 5,
-            long_break_duration: 15,
-            enable_chime: true,
+            long_break_duration: 10,
+            mute: false,
         }
     }
 
@@ -51,7 +52,6 @@ impl SessionConfig {
         self.focus_duration = self.prompt_for_duration("Focus duration");
         self.break_duration = self.prompt_for_duration("Short break duration");
         self.long_break_duration = self.prompt_for_duration("Long break duration");
-        self.enable_chime = self.prompt_for_audio("Enable the 'session complete' chime?");
         self.validate_config();
     }
 
@@ -60,10 +60,10 @@ impl SessionConfig {
         println!("Focus duration: {} mins", self.focus_duration);
         println!("Break duration: {} mins", self.break_duration);
         println!("Long Break duration: {} mins", self.long_break_duration);
-        if self.enable_chime == true {
-            println!("Chime: enabled");
-        } else {
+        if self.mute {
             println!("Chime: disabled");
+        } else {
+            println!("Chime: enabled");
         }
         print!("Start the session? (y/N): ");
         io::stdout().flush().unwrap();
@@ -111,20 +111,6 @@ impl SessionConfig {
         }
     }
 
-    fn prompt_for_audio(&self, prompt: &str) -> bool {
-        print!("{} (y/N): ", prompt);
-        io::stdout().flush().unwrap();
-
-        let mut input = String::new();
-        io::stdin()
-            .read_line(&mut input)
-            .expect("Failed to read input - prompt_for_audio");
-        match input.trim() {
-            "y" | "Y" => return true,
-            _ => return false,
-        }
-    }
-
     fn get_session_duration(&self, duration_type: DurationType) -> (String, String) {
         let duration: i64 = match duration_type {
             DurationType::Focus => self.focus_duration,
@@ -155,7 +141,7 @@ fn run_session(config: &SessionConfig) {
     ];
     let mut session_cnt = 0;
     let mut round = 1;
-    let should_chime = config.enable_chime;
+    let mute = config.mute;
 
     let square_emoji = [
         char::from_u32(SquareEmoji::Open as u32).unwrap(),
@@ -191,16 +177,14 @@ fn run_session(config: &SessionConfig) {
             let ones = (focus_min % 10) as usize;
             merge_and_print(ascii_art[tens], ascii_art[ones]);
 
-            sleep(Duration::new(60, 0));
+            sleep(Duration::new(1, 0));
             focus_min -= 1;
         }
-        if should_chime == true {
+        if !mute {
             thread::spawn(move || {
                 play_audio();
             });
         }
-
-        let (start, end) = config.get_session_duration(DurationType::Break);
 
         if (session_cnt + 1) % 4 == 0 {
             long_break = true;
@@ -239,10 +223,10 @@ fn run_session(config: &SessionConfig) {
             let ones = (break_min % 10) as usize;
             merge_and_print(ascii_art[tens], ascii_art[ones]);
 
-            sleep(Duration::new(60, 0));
+            sleep(Duration::new(1, 0));
             break_min -= 1;
         }
-        if should_chime == true {
+        if !mute {
             thread::spawn(move || {
                 play_audio();
             });
@@ -281,8 +265,40 @@ fn merge_and_print(a: &str, b: &str) {
     println!();
 }
 
+
+#[derive(Parser)]
+#[command(version, about = "Command line Pomodoro Timer", long_about = None)]
+struct Args {
+    #[arg(short, long, help="Preset pomodoro (focus/break/long break): 1) 25/5/10, 2) 50/10/20", value_name = "1|2" )]
+    preset: Option<u32>,
+    
+    #[arg(short, long, help="Disable session/break complete chime")]
+    mute: bool,
+    
+}
+
 fn main() {
+    let cli = Args::parse();
     let mut config = SessionConfig::new();
-    config.prompt_for_settings();
-    run_session(&config);
+    config.mute = cli.mute;
+
+    if let Some(v) = cli.preset {
+        match v {
+            1 => {
+                run_session(&config);
+            },
+            2 => {
+                config.focus_duration = 50;
+                config.break_duration = 10;
+                config.long_break_duration = 20;
+                run_session(&config);
+            },
+            _ => {
+                eprintln!("{}: '{}' is not a valid preset code.\n\nFor more information, try 'pomosh --help'", "error".red(), v);
+            }
+        }
+    } else {
+        config.prompt_for_settings();
+        run_session(&config);
+    }
 }
