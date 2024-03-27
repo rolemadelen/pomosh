@@ -58,25 +58,57 @@ $ brew update
 $ brew upgrade pomosh
 ```
 
-## Guide 
+## Usage 
 
-You can set the focus, short-break, and the long-break durations all in minutes. You can also enable or disable the chime when the session/break completes.
+```text
+Usage: pomosh [OPTIONS]
+
+Options:
+  -p, --preset <1|2>  Preset pomodoro (focus/break/long break): 1) 25/5/10, 2) 50/10/20
+  -m, --mute          Disable session/break complete chime
+  -h, --help          Print help
+  -V, --version       Print version
+```
+
+You can run the command `pomosh` to configure the focus, short break, and long break durations.
 
 ```text
 Focus duration (5-90 minutes): 50
 Short break duration (5-90 minutes): 10
 Long break duration (5-90 minutes): 20
-Enable the 'session complete' chime? (y/N): y
 ```
 
 Before your session starts, you can double check your configuration. 
 
 ```text
-Focus duration: 50 mins
+Focus duration: 60 mins
 Break duration: 10 mins
 Long Break duration: 20 mins
-Chime: disabled
-Start the session? (y/N): N
+Chime: enabled
+Start the session? (y/N): Y
+```
+
+### Preset
+
+`pomosh` comes with two preset configurations (Focus duration / Short break / Long break):
+1. 25/5/10
+2. 50/10/20
+
+If you want to run one of the presets, use `--preset=<OPTION>`.
+
+```sh
+$ pomosh --preset=1 # runs 25/5/10
+$ pomosh --preset=2 # runs 50/10/20
+```
+
+### Chime
+
+The chime is **enabled by default**. If you want to disable it, pass `--mute` option.
+
+```sh
+$ pomosh --mute
+
+$ pomosh --preset=1 --mute # runs the 25/5/10 preset with no chime
 ```
 
 ---
@@ -87,10 +119,10 @@ When the session begins, you'll see these notations at the top:
 📕 ◻ ◻ ◻  (r1.1)
 ```
 
-- 📕 -> current session
+- 📕 -> current pomodoro session
 - ◻ -> session not started
 - ◼ -> on short break
-- (r1.1) -> round 1 session 1
+- (r1.1) -> round 1 pomodoro 1
 
 So on the 4th session, the notations will look like the below:
 
@@ -98,4 +130,4 @@ So on the 4th session, the notations will look like the below:
 📕 📗 📘 📙  (r1.4)
 ```
 
-Each book represents the session.
+Each book represents the pomodoro session.
