@@ -24,6 +24,7 @@ enum BookEmoji {
 enum DurationType {
     Focus,
     Break,
+    LongBreak,
 }
 
 struct SessionConfig {
@@ -125,11 +126,11 @@ impl SessionConfig {
     }
 
     fn get_session_duration(&self, duration_type: DurationType) -> (String, String) {
-        let duration: i64;
-        match duration_type {
-            DurationType::Focus => duration = self.focus_duration,
-            DurationType::Break => duration = self.break_duration,
-        }
+        let duration: i64 = match duration_type {
+            DurationType::Focus => self.focus_duration,
+            DurationType::Break => self.break_duration,
+            DurationType::LongBreak => self.long_break_duration,
+        };
 
         let session_start = Local::now();
         let session_end = session_start + TimeDelta::try_minutes(duration).unwrap();
@@ -221,11 +222,13 @@ fn run_session(config: &SessionConfig) {
             }
             println!(" (r{}.{})", round, session_cnt + 1);
             if long_break {
+                let (start, end) = config.get_session_duration(DurationType::LongBreak);
                 println!(
                     "\nlong break: {} mins\n({start} - {end})",
                     config.long_break_duration
                 );
             } else {
+                let (start, end) = config.get_session_duration(DurationType::Break);
                 println!(
                     "\nshort break: {} mins\n({start} - {end})",
                     config.break_duration
