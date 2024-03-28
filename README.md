@@ -116,7 +116,7 @@ $ pomosh # default style
 $ pomosh --style=1 # same as above
 ```
 
-![](./assets/style-univers.gif)
+![](./assets/style_univers.gif)
 
 #### Yuanqing
 
@@ -124,7 +124,7 @@ $ pomosh --style=1 # same as above
 $ pomosh --style=2
 ```
 
-![](./assets/style-yuanqing.gif)
+![](./assets/style_yuanqing.gif)
 
 ### Chime
 
