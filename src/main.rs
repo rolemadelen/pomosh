@@ -15,6 +15,7 @@ enum SquareEmoji {
     Open = 0x25fb,
     Closed = 0x25fc,
 }
+
 enum BookEmoji {
     Red = 0x1f4d5,
     Green = 0x1f4d7,
@@ -28,11 +29,17 @@ enum DurationType {
     LongBreak,
 }
 
+enum TextStyle {
+    Yuanqing,
+    Univers
+}
+
 struct SessionConfig {
     focus_duration: i64,
     break_duration: i64,
     long_break_duration: i64,
     mute: bool,
+    style: TextStyle
 }
 
 impl SessionConfig {
@@ -42,6 +49,7 @@ impl SessionConfig {
             break_duration: 5,
             long_break_duration: 10,
             mute: false,
+            style: TextStyle::Univers
         }
     }
 
@@ -80,7 +88,7 @@ impl SessionConfig {
     }
 
     fn prompt_for_duration(&self, prompt: &str) -> i64 {
-        let duration_bound = [5, 90];
+        let duration_bound = [5, 100];
 
         loop {
             print!(
@@ -127,18 +135,36 @@ impl SessionConfig {
 }
 
 fn run_session(config: &SessionConfig) {
-    let ascii_art: [&str; 10] = [
-        "000000\n00  00\n00  00\n00  00\n000000",
-        "1111  \n  11  \n  11  \n  11  \n111111",
-        "222222\n     2\n222222\n2     \n222222",
-        "333333\n    33\n333333\n    33\n333333",
-        "44  44\n44  44\n444444\n    44\n    44",
-        "555555\n55    \n555555\n    55\n555555",
-        "666666\n66    \n666666\n66  66\n666666",
-        "777777\n    77\n    77\n    77\n    77",
-        "888888\n88  88\n888888\n88  88\n888888",
-        "999999\n99  99\n999999\n    99\n999999",
-    ];
+    let ascii_art  = match config.style {
+        TextStyle::Univers => {
+            [
+            "   ,a8888a,   \n ,8P\"'  `\"Y8, \n,8P        Y8,\n88          88\n88          88\n`8b        d8'\n `8ba,  ,ad8' \n   \"Y8888P\"   ",
+            "    88\n  ,d88\n888888\n    88\n    88\n    88\n    88\n    88",
+            " ad888888b,\nd8\"     \"88\n        a8P\n     ,d8P\" \n   a8P\"    \n a8P'      \nd8\"        \n88888888888",
+            " ad888888b,\nd8\"     \"88\n        a8P\n     aad8\" \n     \"\"Y8, \n        \"8b\nY8,     a88\n \"Y888888P'",
+            "        ,d8  \n      ,d888  \n    ,d8\" 88  \n  ,d8\"   88  \n,d8\"     88  \n8888888888888\n         88  \n         88  ",
+            "8888888888 \n88         \n88  ____   \n88a8PPPP8b,\nPP\"     `8b\n         d8\nY8a     a8P\n \"Y88888P\" ",
+            "  ad8888ba,\n 8P'    \"Y8\nd8         \n88,dd888bb,\n88P'    `8b\n88       d8\n88a     a8P\n \"Y88888P\" ",
+            "888888888888\n        ,8P'\n       d8\"  \n     ,8P'   \n    d8\"     \n  ,8P'      \n d8\"        \n8P'         ",
+            " ad88888ba \nd8\"     \"8b\nY8a     a8P\n \"Y8aaa8P\" \n ,d8\"\"\"8b, \nd8\"     \"8b\nY8a     a8P\n \"Y88888P\" ",
+            " ad88888ba \nd8\"     \"88\n8P       88\nY8,    ,d88\n \"PPPPPP\"88\n         8P\n8b,    a8P \n`\"Y8888P'  ",
+            ]
+        },
+        TextStyle::Yuanqing => {
+            [
+                "000000\n00  00\n00  00\n00  00\n000000",
+                "1111  \n  11  \n  11  \n  11  \n111111",
+                "222222\n     2\n222222\n2     \n222222",
+                "333333\n    33\n333333\n    33\n333333",
+                "44  44\n44  44\n444444\n    44\n    44",
+                "555555\n55    \n555555\n    55\n555555",
+                "666666\n66    \n666666\n66  66\n666666",
+                "777777\n    77\n    77\n    77\n    77",
+                "888888\n88  88\n888888\n88  88\n888888",
+                "999999\n99  99\n999999\n    99\n999999",
+            ]
+        }
+    };
     let mut session_cnt = 0;
     let mut round = 1;
     let mute = config.mute;
@@ -175,7 +201,7 @@ fn run_session(config: &SessionConfig) {
 
             let tens = (focus_min / 10) as usize;
             let ones = (focus_min % 10) as usize;
-            merge_and_print(ascii_art[tens], ascii_art[ones]);
+            merge_and_print(ascii_art[tens], ascii_art[ones], &config.style);
 
             sleep(Duration::new(60, 0));
             focus_min -= 1;
@@ -221,7 +247,7 @@ fn run_session(config: &SessionConfig) {
 
             let tens = (break_min / 10) as usize;
             let ones = (break_min % 10) as usize;
-            merge_and_print(ascii_art[tens], ascii_art[ones]);
+            merge_and_print(ascii_art[tens], ascii_art[ones], &config.style);
 
             sleep(Duration::new(60, 0));
             break_min -= 1;
@@ -250,21 +276,24 @@ fn play_audio() {
     sink.sleep_until_end();
 }
 
-fn merge_and_print(a: &str, b: &str) {
+fn merge_and_print(a: &str, b: &str, style: &TextStyle) {
     let a = a.to_string();
     let b = b.to_string();
 
     let a: Vec<&str> = a.split('\n').collect();
     let b: Vec<&str> = b.split('\n').collect();
 
+    let bound = match style {
+        TextStyle::Yuanqing => 5,
+        TextStyle::Univers => 8,
+    };
     println!();
-    for i in 0..5 {
+    for i in 0..bound {
         print!(" {}  {}", a[i].bright_blue(), b[i].bright_blue());
         println!();
     }
     println!();
 }
-
 
 #[derive(Parser)]
 #[command(version, about = "Command line Pomodoro Timer", long_about = None)]
@@ -272,15 +301,31 @@ struct Args {
     #[arg(short, long, help="Preset pomodoro (focus/break/long break): 1) 25/5/10, 2) 50/10/20", value_name = "1|2" )]
     preset: Option<u32>,
     
-    #[arg(short, long, help="Disable session/break complete chime")]
+    #[arg(short, long, help="Configure timer text font\n 1) Univers (*default)\n 2) Yuanqing", value_name="1|2")]
+    style: Option<u32>,
+
+    #[arg(short, long, help="Disable session/break complete chime", default_value_t = false)]
     mute: bool,
-    
 }
 
 fn main() {
     let cli = Args::parse();
     let mut config = SessionConfig::new();
     config.mute = cli.mute;
+
+    if let Some(v) = cli.style {
+        match v {
+            1 => {
+                config.style = TextStyle::Univers;
+            },
+            2 => {
+                config.style = TextStyle::Yuanqing;
+            },
+            _ => {
+                eprintln!("{}: '{}' is not a valid style code.\n\nFor more information, try 'pomosh --help'", "error".red(), v);
+            }
+        }
+    }
 
     if let Some(v) = cli.preset {
         match v {
