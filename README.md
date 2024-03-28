@@ -65,6 +65,9 @@ Usage: pomosh [OPTIONS]
 
 Options:
   -p, --preset <1|2>  Preset pomodoro (focus/break/long break): 1) 25/5/10, 2) 50/10/20
+  -s, --style <1|2>   Configure timer text font
+                       1) Univers (*default)
+                       2) Yuanqing
   -m, --mute          Disable session/break complete chime
   -h, --help          Print help
   -V, --version       Print version
@@ -100,6 +103,28 @@ If you want to run one of the presets, use `--preset=<OPTION>`.
 $ pomosh --preset=1 # runs 25/5/10
 $ pomosh --preset=2 # runs 50/10/20
 ```
+
+### Style 
+
+You can use `--style=<1|2>` flag to configure different text styles for the timer.
+
+#### Univers
+
+```sh
+$ pomosh # default style
+
+$ pomosh --style=1 # same as above
+```
+
+![](./assets/style-univers.gif)
+
+#### Yuanqing
+
+```sh
+$ pomosh --style=2
+```
+
+![](./assets/style-yuanqing.gif)
 
 ### Chime
 
