@@ -37,7 +37,7 @@ Typical pomodoro intervals are 25/5 (25 minutes on, 5 minutes off), and 50/10.
 First, install `rustup` to get the `rust` compiler using `curl https://sh.rustup.rs -sSf | sh -s`. Then, 
 
 ```sh
-$ git clone https://github.comrolemadelen/pomosh
+$ git clone https://github.com/rolemadelen/pomosh
 $ cd pomosh
 $ cargo build --release
 
