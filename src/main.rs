@@ -88,7 +88,7 @@ impl SessionConfig {
     }
 
     fn prompt_for_duration(&self, prompt: &str) -> i64 {
-        let duration_bound = [1, 100];
+        let duration_bound = [5, 100];
 
         loop {
             print!(
@@ -203,7 +203,7 @@ fn run_session(config: &SessionConfig) {
             let ones = (focus_min % 10) as usize;
             merge_and_print(ascii_art[tens], ascii_art[ones], &config.style);
 
-            sleep(Duration::new(1, 0));
+            sleep(Duration::new(60, 0));
             focus_min -= 1;
         }
         if !mute {
