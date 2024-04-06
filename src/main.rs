@@ -88,7 +88,7 @@ impl SessionConfig {
     }
 
     fn prompt_for_duration(&self, prompt: &str) -> i64 {
-        let duration_bound = [5, 100];
+        let duration_bound = [1, 100];
 
         loop {
             print!(
@@ -203,7 +203,7 @@ fn run_session(config: &SessionConfig) {
             let ones = (focus_min % 10) as usize;
             merge_and_print(ascii_art[tens], ascii_art[ones], &config.style);
 
-            sleep(Duration::new(60, 0));
+            sleep(Duration::new(1, 0));
             focus_min -= 1;
         }
         if !mute {
@@ -217,6 +217,10 @@ fn run_session(config: &SessionConfig) {
             break_min <<= 1;
         }
 
+        let (start, end) = match long_break {
+            true => config.get_session_duration(DurationType::LongBreak),
+            false => config.get_session_duration(DurationType::Break),
+        };
         while break_min >= 0 {
             print!("\x1B[2J\x1b[1;1H");
             println!();
@@ -232,13 +236,11 @@ fn run_session(config: &SessionConfig) {
             }
             println!(" (r{}.{})", round, session_cnt + 1);
             if long_break {
-                let (start, end) = config.get_session_duration(DurationType::LongBreak);
                 println!(
                     "\nlong break: {} mins\n({start} - {end})",
                     config.long_break_duration
                 );
             } else {
-                let (start, end) = config.get_session_duration(DurationType::Break);
                 println!(
                     "\nshort break: {} mins\n({start} - {end})",
                     config.break_duration
@@ -298,7 +300,7 @@ fn merge_and_print(a: &str, b: &str, style: &TextStyle) {
 #[derive(Parser)]
 #[command(version, about = "Command line Pomodoro Timer", long_about = None)]
 struct Args {
-    #[arg(short, long, help="Preset pomodoro (focus/break/long break): 1) 25/5/10, 2) 50/10/20", value_name = "1|2" )]
+    #[arg(short, long, help="Preset pomodoro (focus/break/long break)\n 1) 25/5/10\n 2) 50/10/20", value_name = "1|2" )]
     preset: Option<u32>,
     
     #[arg(short, long, help="Configure timer text font\n 1) Univers (*default)\n 2) Yuanqing", value_name="1|2")]
