@@ -47,7 +47,7 @@ $ ./target/release/pomosh
 ### Homebrew
 
 ```shell
-$ brew tap img9417/pomosh
+$ brew tap rolemadelen/pomosh
 $ brew install pomosh
 ```
 
